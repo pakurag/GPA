@@ -9,6 +9,22 @@ VALID_COMMANDS = {
     "wait": "wait <milliseconds>            → Wait for a specified time.",
     "press_key": "press_key <keycombo>      → Press a key or key combination (e.g. enter, ctrl+s)."
 }
+def activate_window(title, match_type="like"):
+    if match_type not in ["like", "eq"]:
+        print(f"[ERROR] Invalid match type '{match_type}'. Use 'like' or 'eq'.")
+        sys.exit(1)
+
+    result = subprocess.run([
+        "powershell",
+        "-ExecutionPolicy", "Bypass",
+        "-File", "Activate-Window.ps1",
+        "-Title", title,
+        "-MatchType", match_type
+    ], capture_output=True, text=True)
+
+    if result.returncode != 0:
+        print(f"[ERROR] Could not activate window with title '{title}':\n{result.stderr}")
+        sys.exit(1)
 
 def take_screenshot():
     result = subprocess.run([
@@ -143,6 +159,13 @@ def process_commands(input_file, template_dir="templates"):
                 sys.exit(1)
             press_key(key_combo)
             time.sleep(0.2)
+
+        elif command.startswith("activate_window "):
+            parts = command[len("activate_window "):].strip().split(" match=")
+            window_title = parts[0].strip()
+            match_type = parts[1].strip() if len(parts) > 1 else "like"
+            activate_window(window_title, match_type)
+            time.sleep(0.5)
 
         else:
             show_valid_commands_and_exit(line_num, command)
