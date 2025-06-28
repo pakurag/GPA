@@ -5,3 +5,7 @@ press_key enter
 press_key tab
 press_key ctrl+s
 press_key alt+f4
+activate_window Notepad
+wait 500
+activate_window "Untitled - Notepad" match=eq
+press_key ctrl+s
