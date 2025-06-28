@@ -1,0 +1,3 @@
+click_on image1.png
+press_ky enter  # Typo!
+wait 1000
