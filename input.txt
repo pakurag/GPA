@@ -1,3 +1,7 @@
 click_on image1.png
 press_ky enter  # Typo!
 wait 1000
+press_key enter
+press_key tab
+press_key ctrl+s
+press_key alt+f4
