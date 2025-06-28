@@ -3,7 +3,6 @@ import subprocess
 import time
 import os
 import sys
-import pyautogui
 
 VALID_COMMANDS = {
     "click_on": "click_on <image.png>        → Click on a template image.",
@@ -58,13 +57,38 @@ def click_at_coordinates(x, y):
         sys.exit(1)
 
 def press_key(key_combo):
-    try:
-        keys = key_combo.lower().split("+")
-        print(f"[INFO] Pressing keys: {keys}")
-        pyautogui.hotkey(*keys)
-    except Exception as e:
-        print(f"[ERROR] Failed to press key(s) '{key_combo}': {e}")
+    # Convert to SendKeys-compatible format
+    key_map = {
+        "enter": "{ENTER}",
+        "tab": "{TAB}",
+        "esc": "{ESC}",
+        "backspace": "{BACKSPACE}",
+        "ctrl": "^",
+        "alt": "%",
+        "shift": "+"
+    }
+
+    # Handle combos like "ctrl+s" or "ctrl+shift+esc"
+    parts = key_combo.lower().split("+")
+    sendkeys = ""
+
+    for part in parts:
+        if part in key_map and len(part) <= 5:
+            sendkeys += key_map[part]
+        else:
+            sendkeys += part
+
+    result = subprocess.run([
+        "powershell",
+        "-ExecutionPolicy", "Bypass",
+        "-File", "Send-Key.ps1",
+        "-Key", sendkeys
+    ], capture_output=True, text=True)
+
+    if result.returncode != 0:
+        print(f"[ERROR] Failed to send key '{key_combo}':\n{result.stderr}")
         sys.exit(1)
+        
 
 def show_valid_commands_and_exit(line_num, command):
     print(f"\n[ERROR] Unknown command on line {line_num}: '{command}'")
