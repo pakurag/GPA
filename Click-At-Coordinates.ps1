@@ -1,3 +1,10 @@
+param (
+    [int]$X,
+    [int]$Y
+)
+
+
+
 Add-Type @"
 using System;
 using System.Runtime.InteropServices;
@@ -14,10 +21,7 @@ public class MouseSimulator {
 }
 "@
 
-param (
-    [int]$X,
-    [int]$Y
-)
+
 
 # Move cursor to X, Y
 [MouseSimulator]::SetCursorPos($X, $Y)
