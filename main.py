@@ -9,6 +9,8 @@ VALID_COMMANDS = {
     "wait": "wait <milliseconds>            → Wait for a specified time.",
     "press_key": "press_key <keycombo>      → Press a key or key combination (e.g. enter, ctrl+s).",
     "take_screenshot": "take_screenshot               → Take a screenshot and save as screenshot.png."
+    "wait_for": "wait_for <image.png> timeout=<ms> → Wait for template image to appear, with timeout.",
+    
 }
 
 def activate_window(title, match_type="like"):
@@ -174,7 +176,47 @@ def process_commands(input_file, template_dir="templates"):
             print("[INFO] Screenshot saved as 'screenshot.png'")
             time.sleep(0.01)
                 
+        elif command.startswith("wait_for "):
+            parts = command[len("wait_for "):].strip().split(" timeout=")
+            if len(parts) != 2:
+                print(f"[ERROR] Invalid syntax for 'wait_for'. Expected: wait_for <image.png> timeout=<ms>")
+                sys.exit(1)
 
+            image_name, timeout_str = parts[0].strip(), parts[1].strip()
+            try:
+                timeout_ms = int(timeout_str)
+            except ValueError:
+                print(f"[ERROR] Invalid timeout value in 'wait_for': {timeout_str}")
+                sys.exit(1)
+
+            template_path = os.path.join(template_dir, image_name)
+            if not os.path.exists(template_path):
+                print(f"[ERROR] Template image '{template_path}' not found.")
+                sys.exit(1)
+
+            print(f"[INFO] Waiting for image '{image_name}' to appear (timeout: {timeout_ms}ms)")
+            interval = 1.0  # seconds between screenshots
+            elapsed = 0.0
+            found = False
+
+            while elapsed < timeout_ms / 1000.0:
+                take_screenshot()
+                coords = None
+                try:
+                    coords = find_template_coordinates("screenshot.png", template_path)
+                    found = True
+                    break
+                except SystemExit:
+                    # Image not found, keep waiting
+                    pass
+
+                time.sleep(interval)
+                elapsed += interval
+
+            if not found:
+                print(f"[ERROR] Timeout: image '{image_name}' not found within {timeout_ms}ms.")
+                sys.exit(1)
+                
         else:
             show_valid_commands_and_exit(line_num, command)
 
