@@ -8,9 +8,9 @@ VALID_COMMANDS = {
     "click_on": "click_on <image.png>        → Click on a template image.",
     "wait": "wait <milliseconds>            → Wait for a specified time.",
     "press_key": "press_key <keycombo>      → Press a key or key combination (e.g. enter, ctrl+s).",
-    "take_screenshot": "take_screenshot               → Take a screenshot and save as screenshot.png."
+    "take_screenshot": "take_screenshot               → Take a screenshot and save as screenshot.png.",
     "wait_for": "wait_for <image.png> timeout=<ms> → Wait for template image to appear, with timeout.",
-    
+    "click": "click <x> <y>                    → Click at screen coordinates (x, y).",
 }
 
 def activate_window(title, match_type="like"):
@@ -217,6 +217,22 @@ def process_commands(input_file, template_dir="templates"):
                 print(f"[ERROR] Timeout: image '{image_name}' not found within {timeout_ms}ms.")
                 sys.exit(1)
                 
+        elif command.startswith("click "):
+            parts = command[len("click "):].strip().split()
+            if len(parts) != 2:
+                print(f"[ERROR] Invalid syntax for 'click'. Expected: click <x> <y>")
+                sys.exit(1)
+
+            try:
+                x = int(parts[0])
+                y = int(parts[1])
+            except ValueError:
+                print(f"[ERROR] Invalid coordinates in 'click': {parts}")
+                sys.exit(1)
+
+            click_at_coordinates(x, y)
+            time.sleep(0.1)
+            
         else:
             show_valid_commands_and_exit(line_num, command)
 
