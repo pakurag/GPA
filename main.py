@@ -7,8 +7,10 @@ import sys
 VALID_COMMANDS = {
     "click_on": "click_on <image.png>        → Click on a template image.",
     "wait": "wait <milliseconds>            → Wait for a specified time.",
-    "press_key": "press_key <keycombo>      → Press a key or key combination (e.g. enter, ctrl+s)."
+    "press_key": "press_key <keycombo>      → Press a key or key combination (e.g. enter, ctrl+s).",
+    "take_screenshot": "take_screenshot               → Take a screenshot and save as screenshot.png."
 }
+
 def activate_window(title, match_type="like"):
     if match_type not in ["like", "eq"]:
         print(f"[ERROR] Invalid match type '{match_type}'. Use 'like' or 'eq'.")
@@ -137,7 +139,7 @@ def process_commands(input_file, template_dir="templates"):
                 sys.exit(1)
 
             take_screenshot()
-            time.sleep(1)
+            time.sleep(0.1)
 
             coords = find_template_coordinates("screenshot.png", template_path)
             click_at_coordinates(coords[0], coords[1])
@@ -166,6 +168,12 @@ def process_commands(input_file, template_dir="templates"):
             match_type = parts[1].strip() if len(parts) > 1 else "like"
             activate_window(window_title, match_type)
             time.sleep(0.5)
+
+        elif command == "take_screenshot":
+            take_screenshot()
+            print("[INFO] Screenshot saved as 'screenshot.png'")
+            time.sleep(0.01)
+                
 
         else:
             show_valid_commands_and_exit(line_num, command)
