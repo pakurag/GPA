@@ -11,6 +11,8 @@ VALID_COMMANDS = {
     "take_screenshot": "take_screenshot               → Take a screenshot and save as screenshot.png.",
     "wait_for": "wait_for <image.png> timeout=<ms> → Wait for template image to appear, with timeout.",
     "click": "click <x> <y>                    → Click at screen coordinates (x, y).",
+    "wait_until_gone": "wait_until_gone <image.png> timeout=<ms> → Wait for template image to disappear, with timeout.",
+
 }
 
 def activate_window(title, match_type="like"):
@@ -232,6 +234,45 @@ def process_commands(input_file, template_dir="templates"):
 
             click_at_coordinates(x, y)
             time.sleep(0.1)
+
+        elif command.startswith("wait_until_gone "):
+            parts = command[len("wait_until_gone "):].strip().split(" timeout=")
+            if len(parts) != 2:
+                print(f"[ERROR] Invalid syntax for 'wait_until_gone'. Expected: wait_until_gone <image.png> timeout=<ms>")
+                sys.exit(1)
+
+            image_name, timeout_str = parts[0].strip(), parts[1].strip()
+            try:
+                timeout_ms = int(timeout_str)
+            except ValueError:
+                print(f"[ERROR] Invalid timeout value in 'wait_until_gone': {timeout_str}")
+                sys.exit(1)
+
+            template_path = os.path.join(template_dir, image_name)
+            if not os.path.exists(template_path):
+                print(f"[ERROR] Template image '{template_path}' not found.")
+                sys.exit(1)
+
+            print(f"[INFO] Waiting for image '{image_name}' to disappear (timeout: {timeout_ms}ms)")
+            interval = 1.0  # seconds
+            elapsed = 0.0
+
+            while elapsed < timeout_ms / 1000.0:
+                take_screenshot()
+                try:
+                    find_template_coordinates("screenshot.png", template_path)
+                    # Still found, wait and try again
+                    time.sleep(interval)
+                    elapsed += interval
+                except SystemExit:
+                    # Image not found — success!
+                    print(f"[INFO] Image '{image_name}' has disappeared.")
+                    break
+            else:
+                print(f"[ERROR] Timeout: image '{image_name}' did not disappear within {timeout_ms}ms.")
+                sys.exit(1)
+
+
             
         else:
             show_valid_commands_and_exit(line_num, command)
